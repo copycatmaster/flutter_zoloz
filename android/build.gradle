@@ -1,0 +1,42 @@
+group 'bee.com.flutter_zoloz'
+version '1.0'
+
+buildscript {
+    repositories {
+
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.0'
+    }
+}
+
+
+rootProject.allprojects {
+    repositories {
+        maven {
+            url  "https://dl.bintray.com/zolozclient/release"
+        }
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 30
+
+    defaultConfig {
+        minSdkVersion 16
+    }
+}
+
+dependencies {
+
+    implementation 'com.zoloz.android.build:zolozkit:1.0.3'
+    implementation "com.squareup.okio:okio:1.7.0@jar"
+    implementation "com.alibaba:fastjson:1.1.68.android"
+}
