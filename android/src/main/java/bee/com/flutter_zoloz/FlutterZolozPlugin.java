@@ -14,6 +14,9 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
 import com.ap.zoloz.hummer.api.IZLZCallback;
 import com.ap.zoloz.hummer.api.ZLZConstants;
 import com.ap.zoloz.hummer.api.ZLZFacade;
@@ -141,7 +144,7 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
       return;
     } else if (call.method.equals("startAuthWithConfig")) {
       ZLZRequest request = new ZLZRequest();
-
+      ZLZResponse
       if(call.argument("clientCfg")!=null) {
         Log.i("flutter","clientCfg:"+call.argument("clientCfg").toString());
       } else {
@@ -173,15 +176,15 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
       request.bizConfig.put(ZLZConstants.PUBLIC_KEY, call.argument("publicKey").toString());
       request.bizConfig.put(ZLZConstants.LOCALE, call.argument("locate").toString());
       //请求服务器
-      String clientCfg = "";
-      request.zlzConfig = clientCfg;
+      request.zlzConfig = call.argument("clientCfg");
 
       ZLZFacade.getInstance().start(request, new IZLZCallback() {
         @Override
         public void onCompleted(ZLZResponse response) {
-          Log.i("flutter", "response:" + response.toString());
-
-
+//          public String retCode;
+//          public Map<String, String> extInfo;
+          Log.i("flutter", "response:" + JSON.toJSONString(response));
+          Log.i("flutter","retCode:"+response.retCode);
 
           new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
