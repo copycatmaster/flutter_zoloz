@@ -3,6 +3,8 @@ package bee.com.flutter_zoloz;
 import java.util.HashMap;
 import androidx.annotation.NonNull;
 import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.app.Activity;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -144,7 +146,6 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
       return;
     } else if (call.method.equals("startAuthWithConfig")) {
       ZLZRequest request = new ZLZRequest();
-      ZLZResponse
       if(call.argument("clientCfg")!=null) {
         Log.i("flutter","clientCfg:"+call.argument("clientCfg").toString());
       } else {
