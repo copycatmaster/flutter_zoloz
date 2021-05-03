@@ -14,11 +14,18 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  String metainfo;
+
+  Future<void> init() async {
+    FlutterZoloz.init();
+    Map ret = await FlutterZoloz.getMetaInfo();
+    this.metainfo = ret['data']['metainfo'];
+  }
 
   @override
   void initState() {
     super.initState();
-    FlutterZoloz.init();
+    init();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -30,33 +37,32 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
         ),
-        body:Center(
+        body: Center(
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
-                  FlatButton(
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      // side: BorderSide(
-                      //   color: Colors.black12,
-                      // ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    onPressed: () {
-                      FlutterZoloz.startAuthWithConfig({
-
-                      }, (token, result, resultCode, resultMsg, callId) {
-                            print("token!!" + token.toString());
-                            print("result!!" + result.toString());
-                            print("resultCode!!" + resultCode.toString());
-                            print("resultMsg!!" + resultMsg.toString());
-                            print("callId!!" + callId.toString());
-                          });
-                    },
-                    child: Text("开始"),
-                  )
-                ])),
+              FlatButton(
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  // side: BorderSide(
+                  //   color: Colors.black12,
+                  // ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                onPressed: () {
+                  FlutterZoloz.startAuthWithConfig({},
+                      (token, result, resultCode, resultMsg, callId) {
+                    print("token!!" + token.toString());
+                    print("result!!" + result.toString());
+                    print("resultCode!!" + resultCode.toString());
+                    print("resultMsg!!" + resultMsg.toString());
+                    print("callId!!" + callId.toString());
+                  });
+                },
+                child: Text("开始"),
+              )
+            ])),
       ),
     );
   }

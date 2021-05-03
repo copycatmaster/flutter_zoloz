@@ -1,8 +1,73 @@
 #import "FlutterZolozPlugin.h"
 
-#import <hummer/ZLZFacade.h>
-#import <hummer/ZLZRequest.h>
-#import <hummer/ZLZResponse.h>
+#import <zolozkit/ZLZFacade.h>
+#import <zolozkit/ZLZRequest.h>
+#import <zolozkit/ZLZResponse.h>
+
+
+@protocol ZolozkitViewControllerDelegate
+- (void)onResult:(BOOL)isSuccess withInfo:(NSDictionary *)info;
+@end
+
+//临时构造的 viewcontroller 外部把参数全都传进去
+@interface ZolozkitViewController : UIViewController
+@property(nonatomic,assign) int callId;
+@property(nonatomic, strong) NSString *clientCfg;
+@property(nonatomic, strong) NSDictionary *bizCfg;
+@property(nullable, nonatomic, weak) id <ZolozkitViewControllerDelegate> delegate;
+@end
+
+@implementation ZolozkitViewController
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+}
+
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor clearColor];
+    [self.navigationController.navigationBar setBackgroundImage:[[UIImage alloc] init] forBarMetrics:UIBarMetricsDefault];
+    self.navigationController.navigationBar.shadowImage = [[UIImage alloc] init];
+    self.navigationController.navigationBar.translucent = YES;
+    self.navigationController.view.backgroundColor = [UIColor clearColor];
+    [self startZoloz];
+}
+
+- (void)startZoloz {
+    ZLZRequest *request = [[ZLZRequest alloc] initWithzlzConfig:self.clientCfg bizConfig:self.bizCfg];
+    __weak typeof(self) weakSelf = self;
+    [[ZLZFacade sharedInstance]
+            startWithRequest:request
+            completeCallback:^(ZLZResponse *response) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [weakSelf dismissViewControllerAnimated:NO completion:^{
+                        [weakSelf.delegate onResult:YES withInfo:@{
+                            @"callId":[NSNumber numberWithInt:weakSelf.callId],
+                            @"retcode":response.retcode,
+                            @"extInfo":response.extInfo
+                        }];
+                    }];
+                });
+            }
+           interruptCallback:^(ZLZResponse *response) {
+               dispatch_async(dispatch_get_main_queue(), ^{
+                   [weakSelf dismissViewControllerAnimated:NO completion:^{
+                       [weakSelf.delegate onResult:NO withInfo:@{
+                           @"callId":[NSNumber numberWithInt:weakSelf.callId],
+                           @"retcode":response.retcode,
+                           @"extInfo":response.extInfo
+                       }];
+                   }];
+               });
+           }];
+}
+
+@end
+
+@interface FlutterZolozPlugin ()
+    <ZolozkitViewControllerDelegate>
+@end
+
 
 @implementation FlutterZolozPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
@@ -19,7 +84,7 @@
   NSLog(@"handleMethodCall: %@",[call description]);
   if ([@"getMetaInfo" isEqualToString:call.method]) {
     result(@{@"code":@"ok",@"msg":@"ok",@"data":@{
-      "metaInfo":weakSelf.metaInfo
+                     @"metaInfo":weakSelf.metainfo
     }});
   } else if ([@"startAuthWithConfig" isEqualToString:call.method]) {
     if ([call.arguments objectForKey:@"clientCfg"] != nil) {
@@ -34,10 +99,10 @@
         result(@{@"code":@"param_error",@"msg":@"no callId",@"data":@{}});
         return;
     }
-    if ([call.arguments objectForKey:@"locate"] != nil) {
-      NSLog(@"locate: %@",[[call.arguments objectForKey:@"locate"] description]);
+    if ([call.arguments objectForKey:@"locale"] != nil) {
+      NSLog(@"locale: %@",[[call.arguments objectForKey:@"locale"] description]);
     } else {
-        result(@{@"code":@"param_error",@"msg":@"no locate",@"data":@{}});
+        result(@{@"code":@"param_error",@"msg":@"no locale",@"data":@{}});
         return;
     }
     if ([call.arguments objectForKey:@"publicKey"] != nil) {
@@ -46,36 +111,32 @@
         result(@{@"code":@"param_error",@"msg":@"no publicKey",@"data":@{}});
         return;
     }
+    NSString * publicKey = [call.arguments objectForKey:@"publicKey"];
+    NSString * locale = [call.arguments objectForKey:@"locale"];
     UIViewController *rootViewController = [[[[UIApplication sharedApplication] delegate] window] rootViewController];
-       NSMutableDictionary *bizConfig = [NSMutableDictionary dictionary];
-      [bizConfig setObject:rootViewController forKey:kZLZCurrentViewControllerKey];
-      //.pass the public key to bizConfig
-      [bizConfig setObject:publicKey forKey:kZLZPubkey];
-      //.pass the locale to bizConfig
-      [bizConfig setObject:locale forKey:kZLZLocaleKey]
-      ZLZRequest *request = [[ZLZRequest alloc] initWithzlzConfig:[[call.arguments objectForKey:@"clientCfg"] toString] bizConfig:[[call.arguments objectForKey:@"clientCfg"] toString]];
-
-      [[ZLZFacade sharedInstance] startWithRequest:request completeCallback:^(ZLZResponse *response) {
-          NSLog(@"认证结果成功:%@", response);
-          dispatch_async(dispatch_get_main_queue(), ^{
-                [weakSelf.channel invokeMethod: @"VerifyFinish" arguments:@{
-                @"callId":call.arguments[@"callId"],
-                @"clientCfg":call.arguments[@"clientCfg"],
-                } result: ^(id _Nullable result) {
-                          NSLog(@"result: %@",[result description]);
-                      }];
-            });
-          
-          NSLog(@"try call VerifyFinish from native");
-      } interruptCallback:^(ZLZResponse *interrupt){
-          NSLog(@"认证结果失败:%@", interrupt);
-
-      }];
-
+      
+    ZolozkitViewController *viewController = [[ZolozkitViewController alloc] init];
+    viewController.clientCfg = [call.arguments objectForKey:@"clientCfg"];
+    
+    NSMutableDictionary *bizConfig = [[NSMutableDictionary alloc] init];
+    [bizConfig setObject:viewController forKey:kZLZCurrentViewControllerKey];
+    [bizConfig setObject:publicKey forKey:kZLZPubkey];
+    [bizConfig setObject:locale forKey:kZLZLocaleKey];
+    viewController.bizCfg = bizConfig;
+    viewController.delegate = self;
+    UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
+    navigationController.modalPresentationStyle = UIModalPresentationOverFullScreen;
+    [rootViewController presentViewController:navigationController animated:NO completion:nil];
 
   } else {
     result(FlutterMethodNotImplemented);
   }
+}
+
+- (void)onResult:(BOOL)isSuccess info:(NSDictionary *)info {
+    [self.channel invokeMethod:@"VerifyFinish" arguments:info result: ^(id _Nullable result) {
+        NSLog(@"result: %@",[result description]);
+    }];
 }
 
 @end

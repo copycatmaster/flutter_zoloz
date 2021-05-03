@@ -2,8 +2,8 @@
 
 @interface FlutterZolozPlugin : NSObject<FlutterPlugin>
 {
-
+    
 }
 @property (nonatomic,retain) FlutterMethodChannel * channel;
-@property (nonatomic,retain) String * metainfo;
+@property (nonatomic,retain) NSString * metainfo;
 @end

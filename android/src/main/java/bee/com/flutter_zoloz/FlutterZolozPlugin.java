@@ -145,6 +145,7 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
       }}));
       return;
     } else if (call.method.equals("startAuthWithConfig")) {
+      Log.i("flutter","startAuthWithConfig !!!!");
       ZLZRequest request = new ZLZRequest();
       if(call.argument("clientCfg")!=null) {
         Log.i("flutter","clientCfg:"+call.argument("clientCfg").toString());
@@ -159,10 +160,10 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
         return;
       }
       final int callId = Integer.parseInt(call.argument("callId").toString());
-      if(call.argument("locate")!=null) {
-        Log.i("flutter","locate:"+call.argument("locate").toString());
+      if(call.argument("locale")!=null) {
+        Log.i("flutter","locale:"+call.argument("locale").toString());
       }else {
-        result.success(packResult("param_error", "need locate", new HashMap<String,Object>(){{}}));
+        result.success(packResult("param_error", "need locale", new HashMap<String,Object>(){{}}));
         return;
       }
       if(call.argument("publicKey")!=null) {
@@ -175,7 +176,7 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
       request.bizConfig = new HashMap<>();
       request.bizConfig.put(ZLZConstants.CONTEXT, activity);
       request.bizConfig.put(ZLZConstants.PUBLIC_KEY, call.argument("publicKey").toString());
-      request.bizConfig.put(ZLZConstants.LOCALE, call.argument("locate").toString());
+      request.bizConfig.put(ZLZConstants.LOCALE, call.argument("locale").toString());
       //请求服务器
       request.zlzConfig = call.argument("clientCfg");
 
@@ -212,7 +213,8 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
 
         @Override
         public void onInterrupted(ZLZResponse response) {
-          Log.i("flutter", "response:" + response.toString());
+          Log.i("flutter", "response:" + JSON.toJSONString(response));
+          Log.i("flutter","retCode:"+response.retCode);
           channel.invokeMethod("VerifyFinish",new HashMap<String, Object>() {{
             put("callId", callId);
           }
@@ -228,6 +230,8 @@ public class FlutterZolozPlugin implements FlutterPlugin, MethodCallHandler,Acti
           });
         }
       });
+      result.success(packResult("ok", "success call", new HashMap<String,Object>(){{}}));
+        return;
     } else {
       result.notImplemented();
     }

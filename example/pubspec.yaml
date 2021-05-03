@@ -11,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  
   flutter_zoloz:
     # When depending on this package from a real application you should use:
     #   flutter_zoloz: ^x.y.z
@@ -23,6 +23,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
+  
+  dio: ^3.0.10
 
 dev_dependencies:
   flutter_test:

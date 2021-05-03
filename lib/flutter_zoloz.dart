@@ -47,9 +47,16 @@ class FlutterZoloz {
       Map config, Function resultCallback) async {
     idPool += 1;
     callbacks[idPool] = resultCallback;
-    print("call _channel startAuth");
+    
     config['callId'] = idPool;
-    final Map ret = await _channel.invokeMethod('startAuthWithConfig', config);
+    Map ret;
+    try {
+      print("call _channel startAuthWithConfig");
+      ret = await _channel.invokeMethod('startAuthWithConfig', config);
+      print("call _channel startAuthWithConfig done");
+    } catch(e) {
+      print("!!!!!! exception"+e.toString());
+    }
     ret['callId'] = idPool;
     return ret;
   }
