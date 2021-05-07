@@ -1,8 +1,9 @@
 #import "FlutterZolozPlugin.h"
 
-#import <zolozkit/ZLZFacade.h>
-#import <zolozkit/ZLZRequest.h>
-#import <zolozkit/ZLZResponse.h>
+#import <hummer/ZLZFacade.h>
+#import <hummer/ZLZRequest.h>
+#import <hummer/ZLZResponse.h>
+#import <hummer/ZLZHummerFacade.h>
 
 
 @protocol ZolozkitViewControllerDelegate
@@ -12,18 +13,20 @@
 //临时构造的 viewcontroller 外部把参数全都传进去
 @interface ZolozkitViewController : UIViewController
 @property(nonatomic,assign) int callId;
-@property(nonatomic, strong) NSString *clientCfg;
-@property(nonatomic, strong) NSDictionary *bizCfg;
+@property(nonatomic, copy) NSString *clientCfg;
+@property(nonatomic, copy) NSDictionary *bizCfg;
 @property(nullable, nonatomic, weak) id <ZolozkitViewControllerDelegate> delegate;
 @end
 
 @implementation ZolozkitViewController
 - (void)viewWillAppear:(BOOL)animated {
+    NSLog(@"ZolozkitViewController viewWillAppear");
     [super viewWillAppear:animated];
 }
 
 
 - (void)viewDidLoad {
+    NSLog(@"ZolozkitViewController viewDidLoad");
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor clearColor];
     [self.navigationController.navigationBar setBackgroundImage:[[UIImage alloc] init] forBarMetrics:UIBarMetricsDefault];
@@ -34,32 +37,43 @@
 }
 
 - (void)startZoloz {
+    //NSLog(@"ZolozkitViewController startZoloz");
+    //NSLog(@"ZolozkitViewController params %@ %@",self.clientCfg,self.bizCfg);
     ZLZRequest *request = [[ZLZRequest alloc] initWithzlzConfig:self.clientCfg bizConfig:self.bizCfg];
+    
     __weak typeof(self) weakSelf = self;
     [[ZLZFacade sharedInstance]
             startWithRequest:request
             completeCallback:^(ZLZResponse *response) {
+                NSLog(@"Zolozkit  startWithRequest completeCallback !!");
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [weakSelf dismissViewControllerAnimated:NO completion:^{
-                        [weakSelf.delegate onResult:YES withInfo:@{
-                            @"callId":[NSNumber numberWithInt:weakSelf.callId],
-                            @"retcode":response.retcode,
-                            @"extInfo":response.extInfo
+                    if (weakSelf) {
+                        [weakSelf dismissViewControllerAnimated:NO completion:^{
+                            [weakSelf.delegate onResult:YES withInfo:@{
+                                @"callId":[NSNumber numberWithInt:weakSelf.callId],
+                                @"retcode":response.retcode,
+                                @"extInfo":response.extInfo
+                            }];
                         }];
-                    }];
+                    }
+
                 });
             }
            interruptCallback:^(ZLZResponse *response) {
+        NSLog(@"Zolozkit  startWithRequest interruptCallback !!");
                dispatch_async(dispatch_get_main_queue(), ^{
-                   [weakSelf dismissViewControllerAnimated:NO completion:^{
-                       [weakSelf.delegate onResult:NO withInfo:@{
-                           @"callId":[NSNumber numberWithInt:weakSelf.callId],
-                           @"retcode":response.retcode,
-                           @"extInfo":response.extInfo
+                   if (weakSelf) {
+                       [weakSelf dismissViewControllerAnimated:NO completion:^{
+                           [weakSelf.delegate onResult:NO withInfo:@{
+                               @"callId":[NSNumber numberWithInt:weakSelf.callId],
+                               @"retcode":response.retcode,
+                               @"extInfo":response.extInfo
+                           }];
                        }];
-                   }];
+                   }
                });
            }];
+    NSLog(@"Zolozkit  startWithRequest called!!");
 }
 
 @end
@@ -75,16 +89,15 @@
       methodChannelWithName:@"flutter_zoloz"
             binaryMessenger:[registrar messenger]];
   FlutterZolozPlugin* instance = [[FlutterZolozPlugin alloc] init];
+  instance.channel = channel;
   [registrar addMethodCallDelegate:instance channel:channel];
-  instance.metainfo = [ZLZFacade getMetaInfo];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
-  __weak typeof(self) weakSelf = self;
   NSLog(@"handleMethodCall: %@",[call description]);
   if ([@"getMetaInfo" isEqualToString:call.method]) {
     result(@{@"code":@"ok",@"msg":@"ok",@"data":@{
-                     @"metaInfo":weakSelf.metainfo
+                     @"metaInfo":[ZLZFacade getMetaInfo]
     }});
   } else if ([@"startAuthWithConfig" isEqualToString:call.method]) {
     if ([call.arguments objectForKey:@"clientCfg"] != nil) {
@@ -122,21 +135,28 @@
     [bizConfig setObject:viewController forKey:kZLZCurrentViewControllerKey];
     [bizConfig setObject:publicKey forKey:kZLZPubkey];
     [bizConfig setObject:locale forKey:kZLZLocaleKey];
+      NSLog(@"!!!!kZLZCurrentViewControllerKey is %@",kZLZCurrentViewControllerKey);
+      NSLog(@"!!!!kZLZPubkey is %@",kZLZPubkey);
+      NSLog(@"!!!!kZLZLocaleKey is %@",kZLZLocaleKey);
+      
     viewController.bizCfg = bizConfig;
+    viewController.callId =[[call.arguments objectForKey:@"callId"] intValue];
     viewController.delegate = self;
     UINavigationController *navigationController = [[UINavigationController alloc] initWithRootViewController:viewController];
     navigationController.modalPresentationStyle = UIModalPresentationOverFullScreen;
-    [rootViewController presentViewController:navigationController animated:NO completion:nil];
-
+      NSLog(@"show UINavigationController now ");
+      [rootViewController presentViewController:navigationController animated:NO completion:nil];
+      NSLog(@"show UINavigationController now done");
   } else {
     result(FlutterMethodNotImplemented);
   }
 }
 
-- (void)onResult:(BOOL)isSuccess info:(NSDictionary *)info {
+- (void)onResult:(BOOL)isSuccess withInfo:(NSDictionary *)info {
     [self.channel invokeMethod:@"VerifyFinish" arguments:info result: ^(id _Nullable result) {
         NSLog(@"result: %@",[result description]);
     }];
 }
+ 
 
 @end

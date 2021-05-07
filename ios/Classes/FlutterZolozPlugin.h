@@ -4,6 +4,5 @@
 {
     
 }
-@property (nonatomic,retain) FlutterMethodChannel * channel;
-@property (nonatomic,retain) NSString * metainfo;
+@property (nonatomic,strong) FlutterMethodChannel * channel;
 @end

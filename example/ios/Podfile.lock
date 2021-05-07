@@ -1,19 +1,28 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_zoloz (0.0.1):
+  - flutter_zoloz (0.0.2):
     - Flutter
-    - zolozkit
+    - zolozkit (= 1.0.0)
   - integration_test (0.0.1):
     - Flutter
-  - zolozkit (1.0.0.200117164959)
+  - zolozkit (1.0.0):
+    - zolozkit/Cherry (= 1.0.0)
+    - zolozkit/Core (= 1.0.0)
+    - zolozkit/Dependency (= 1.0.0)
+    - zolozkit/ZolozDocScan (= 1.0.0)
+  - zolozkit/Cherry (1.0.0)
+  - zolozkit/Core (1.0.0)
+  - zolozkit/Dependency (1.0.0)
+  - zolozkit/ZolozDocScan (1.0.0)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_zoloz (from `.symlinks/plugins/flutter_zoloz/ios`)
   - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - zolozkit
 
 SPEC REPOS:
-  https://github.com/CocoaPods/Specs.git:
+  https://github.com/zoloz-pte-ltd/zoloz-demo-ios:
     - zolozkit
 
 EXTERNAL SOURCES:
@@ -26,10 +35,10 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
-  flutter_zoloz: 03febfa4f2f73f869608b9dcb1fd83ae1d4454b7
+  flutter_zoloz: fa22a9be621081917d1d090930cb69ff2727f85e
   integration_test: 6eb66a19f7104200dcfdd62bc0077e1b09686e4f
-  zolozkit: 7e92ea000080533ac325377e73e66ce52f8052d3
+  zolozkit: 849c13a1daa59fa72c3a4673caf06df7daf74218
 
-PODFILE CHECKSUM: c8d0ff0b3add876c2bfa10455fa4d84871ebc935
+PODFILE CHECKSUM: a8674381fa220e58c334fdc0d5d8ac762db9de70
 
 COCOAPODS: 1.10.1
