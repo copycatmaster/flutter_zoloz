@@ -48,11 +48,14 @@
                 NSLog(@"Zolozkit  startWithRequest completeCallback !!");
                 dispatch_async(dispatch_get_main_queue(), ^{
                     if (weakSelf) {
+                        NSLog(@"Zolozkit  response callId: %d !!",weakSelf.callId);
+                        NSLog(@"Zolozkit  response retcode: %@ !!",response.retcode);
+                        NSLog(@"Zolozkit  response extInfo: %@ !!",response.extInfo);
                         [weakSelf dismissViewControllerAnimated:NO completion:^{
                             [weakSelf.delegate onResult:YES withInfo:@{
                                 @"callId":[NSNumber numberWithInt:weakSelf.callId],
                                 @"retcode":response.retcode,
-                                @"extInfo":response.extInfo
+                                @"extInfo":response.extInfo == nil?@{}:response.extInfo
                             }];
                         }];
                     }
@@ -153,6 +156,7 @@
 }
 
 - (void)onResult:(BOOL)isSuccess withInfo:(NSDictionary *)info {
+    NSLog(@"onResult: %@",info);
     [self.channel invokeMethod:@"VerifyFinish" arguments:info result: ^(id _Nullable result) {
         NSLog(@"result: %@",[result description]);
     }];

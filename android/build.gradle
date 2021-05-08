@@ -1,11 +1,23 @@
 group 'bee.com.flutter_zoloz'
 version '1.0'
 
+def getFlutterZolozProjectDir() {
+    String result = ""
+    rootProject.allprojects { project ->
+        if (project.properties.get("identityPath").toString() == ":flutter_zoloz") { // 这里是flutter的约定, 插件的module名是插件名, :是gradle的约定. project前加:
+            result = project.properties.get("projectDir").toString()
+        }
+    }
+    return result
+}
+
+
 buildscript {
     repositories {
 
         google()
-        jcenter()
+        mavenCentral()
+        //jcenter()
     }
 
     dependencies {
@@ -15,12 +27,14 @@ buildscript {
 
 
 rootProject.allprojects {
+    def dir = getFlutterZolozProjectDir()
     repositories {
-        maven {
-            url  "https://dl.bintray.com/zolozclient/release"
+        maven { // 添加这个指向本地的仓库目录
+            url "$dir/libs"
         }
         google()
-        jcenter()
+        mavenCentral()
+        //jcenter()
     }
 }
 
@@ -36,7 +50,7 @@ android {
 
 dependencies {
 
-    implementation 'com.zoloz.android.build:zolozkit:1.0.3'
+    implementation 'com.bee:zolozkit:1.0.3'
     implementation "com.squareup.okio:okio:1.7.0@jar"
     implementation "com.alibaba:fastjson:1.1.68.android"
 }
